@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     bot_token: SecretStr
 
     api_base: str
-    api_key: SecretStr
+    api_key: SecretStr | None = Field(default=None)
     model: str
 
     proxy: SecretStr | None = Field(default=None)

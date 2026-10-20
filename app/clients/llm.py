@@ -16,7 +16,11 @@ class LLMClient:
 
         self.client = AsyncOpenAI(
             base_url=settings.api_base,
-            api_key=settings.api_key.get_secret_value(),
+            api_key=(
+                settings.api_key.get_secret_value()
+                if settings.api_key is not None
+                else None
+            ),
             timeout=60.0,
             http_client=(
                 DefaultAsyncHttpxClient(proxy=settings.proxy.get_secret_value())
