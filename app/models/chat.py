@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
-ReplyMode = Literal["roast", "waifu", "otaku"]
+ReplyMode = Literal["clear", "roast", "waifu", "otaku"]
 
 
 @dataclass(frozen=True)

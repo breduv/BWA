@@ -5,9 +5,6 @@ from app.core.config import Settings
 
 
 async def load_tools(settings: Settings) -> list[BaseTool]:
-    if not settings.mcp_servers:
-        return []
-
     config = {
         "mcpServers": settings.mcp_servers,
     }

@@ -12,6 +12,7 @@ from app.services.chat import ChatService
 from app.views.telegram import TelegramView
 
 BOT_COMMANDS: tuple[BotCommand, ...] = (
+    BotCommand(command="clear", description="Чистый ответ без стиля"),
     BotCommand(command="roast", description="Разобрать аргументы по фактам"),
     BotCommand(command="waifu", description="Ответить как аниме-вайфу"),
     BotCommand(command="otaku", description="Ответить как отаку"),

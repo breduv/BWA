@@ -20,6 +20,7 @@ async def create_llm(
             base_url=settings.api_base,
             api_key=settings.api_key,
             http_async_client=http_client,
+            http_socket_options=(),
             use_responses_api=False,
             timeout=60.0,
             max_retries=1,

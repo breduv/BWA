@@ -16,6 +16,7 @@ from data.promt import (
 )
 
 SYSTEM_PROMPTS: dict[ReplyMode, str] = {
+    "clear": "Вы ассистент, который выполняет всё, что ему говорит пользователь.",
     "roast": ROAST_SYSTEM_PROMPT,
     "waifu": WAIFU_SYSTEM_PROMPT,
     "otaku": OTAKU_SYSTEM_PROMPT,

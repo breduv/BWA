@@ -11,6 +11,11 @@ def setup_router(service: ChatService, view: TelegramView) -> Router:
     handlers = ChatController(service=service, view=view)
 
     router.message.register(
+        handlers.handle_clear,
+        Command("clear"),
+    )
+
+    router.message.register(
         handlers.handle_roast,
         Command("roast"),
     )

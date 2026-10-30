@@ -15,6 +15,7 @@ services:
       API_BASE: ${API_BASE}
       API_KEY: ${API_KEY}
       MODEL: ${MODEL}
+      MCP_SERVERS: ${MCP_SERVERS}
       PROXY: ${PROXY}
       TG_PROXY: ${TG_PROXY}
       LOG_LEVEL: ${LOG_LEVEL}
@@ -36,8 +37,7 @@ services:
       SEARXNG_BASE_URL: http://searxng:8080/
 
     volumes:
-      - ./searxng:/etc/searxng
-      - searxng_cache:/var/cache/searxng
+      - "./searxng:/etc/searxng"
 
     networks:
       - agent_net

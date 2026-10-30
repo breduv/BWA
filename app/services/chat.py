@@ -20,5 +20,4 @@ class ChatService:
                 config={"recursion_limit": 12},
             )
 
-        # return result["messages"][-1].text
-        return str(result)
+        return result["messages"][-1].text

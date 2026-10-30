@@ -11,6 +11,9 @@ class ChatController:
         self.service = service
         self.view = view
 
+    async def handle_clear(self, message: Message) -> None:
+        await self._handle_reply(message, mode="clear")
+
     async def handle_roast(self, message: Message) -> None:
         await self._handle_reply(message, mode="roast")
 
