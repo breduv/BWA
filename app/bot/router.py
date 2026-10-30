@@ -1,18 +1,26 @@
-from aiogram import F, Router
-from loguru import logger
+from aiogram import Router
+from aiogram.filters import Command
 
-from app.bot.handlers import BotHandlers
+from app.controllers.chat import ChatController
 from app.services.chat import ChatService
+from app.views.telegram import TelegramView
 
 
-def setup_router(chat_service: ChatService) -> Router:
+def setup_router(service: ChatService, view: TelegramView) -> Router:
     router = Router(name="main")
-    handlers = BotHandlers(chat_service=chat_service)
+    handlers = ChatController(service=service, view=view)
 
     router.message.register(
-        handlers.handle_text,
-        F.text,
+        handlers.handle_roast,
+        Command("roast"),
     )
-    logger.debug(f"Text message handler registered: router={router.name}")
+    router.message.register(
+        handlers.handle_waifu,
+        Command("waifu"),
+    )
+    router.message.register(
+        handlers.handle_otaku,
+        Command("otaku"),
+    )
 
     return router

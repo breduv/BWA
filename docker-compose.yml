@@ -1,0 +1,65 @@
+services:
+  bwa:
+    image: bwa:${IMAGE_TAG:-latest}
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: bwa
+
+    restart: unless-stopped
+
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      API_BASE: ${API_BASE}
+      API_KEY: ${API_KEY}
+      MODEL: ${MODEL}
+      PROXY: ${PROXY}
+      TG_PROXY: ${TG_PROXY}
+      LOG_LEVEL: ${LOG_LEVEL}
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "1"
+
+    networks:
+      - agent_net
+
+  searxng:
+    image: searxng/searxng:latest
+    restart: unless-stopped
+
+    environment:
+      SEARXNG_BASE_URL: http://searxng:8080/
+
+    volumes:
+      - ./searxng:/etc/searxng
+      - searxng_cache:/var/cache/searxng
+
+    networks:
+      - agent_net
+
+  mcp-search:
+    image: isokoliuk/mcp-searxng:latest
+    restart: unless-stopped
+
+    depends_on:
+      - searxng
+
+    environment:
+      SEARXNG_URL: http://searxng:8080
+      MCP_HTTP_HOST: 0.0.0.0
+      MCP_HTTP_PORT: "3000"
+
+    networks:
+      - agent_net
+
+networks:
+  agent_net:
+    driver: bridge
+
+volumes:
+  searxng_cache:
