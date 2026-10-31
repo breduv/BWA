@@ -1,8 +1,7 @@
-# app/models/chat.py
 from dataclasses import dataclass
-from typing import Literal
 
-ReplyMode = Literal["clear", "roast", "waifu", "otaku"]
+# The list of modes is defined in data/prompts.yml, not in Python type hints.
+ReplyMode = str
 
 
 @dataclass(frozen=True)

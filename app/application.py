@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.types import BotCommand
@@ -8,15 +10,9 @@ from app.bot.router import setup_router
 from app.clients.llm import create_llm
 from app.clients.mcp import load_tools
 from app.core.config import Settings
+from app.core.prompts import PromptMode, load_prompt_modes
 from app.services.chat import ChatService
 from app.views.telegram import TelegramView
-
-BOT_COMMANDS: tuple[BotCommand, ...] = (
-    BotCommand(command="clear", description="Чистый ответ без стиля"),
-    BotCommand(command="roast", description="Разобрать аргументы по фактам"),
-    BotCommand(command="waifu", description="Ответить как аниме-вайфу"),
-    BotCommand(command="otaku", description="Ответить как отаку"),
-)
 
 
 def _create_bot(settings: Settings) -> Bot:
@@ -26,32 +22,47 @@ def _create_bot(settings: Settings) -> Bot:
     return Bot(token=settings.bot_token.get_secret_value(), session=session)
 
 
-def _create_dispatcher(service: ChatService) -> Dispatcher:
+def _create_dispatcher(
+    service: ChatService,
+    modes: Mapping[str, PromptMode],
+) -> Dispatcher:
     dispatcher = Dispatcher()
-    dispatcher.include_router(setup_router(service=service, view=TelegramView()))
+    dispatcher.include_router(
+        setup_router(service=service, view=TelegramView(), modes=modes)
+    )
     return dispatcher
 
 
 async def run_application(settings: Settings) -> None:
     """Build application dependencies and own their lifecycle during polling."""
     logger.info("Initializing application")
+    modes = load_prompt_modes()
+    logger.info("Configured prompt modes: {}", ", ".join(modes))
 
     try:
         async with create_llm(settings) as model:
             tools = await load_tools(settings)
             logger.info("MCP tools loaded: count={}", len(tools))
 
-            graph = build_graph(model, tools)
-            dispatcher = _create_dispatcher(ChatService(graph))
+            graph = build_graph(
+                model,
+                tools,
+                prompts={name: mode.prompt for name, mode in modes.items()},
+            )
+            dispatcher = _create_dispatcher(ChatService(graph), modes)
 
             async with _create_bot(settings).context() as bot:
-                await bot.set_my_commands(list(BOT_COMMANDS))
+                await bot.set_my_commands(
+                    [
+                        BotCommand(command=mode.name, description=mode.description)
+                        for mode in modes.values()
+                    ]
+                )
 
                 logger.info("Starting Telegram polling")
                 await dispatcher.start_polling(
                     bot,
                     allowed_updates=dispatcher.resolve_used_update_types(),
-                    # The bot context owns session cleanup, including startup errors.
                     close_bot_session=False,
                 )
     finally:

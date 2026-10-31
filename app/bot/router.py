@@ -1,31 +1,30 @@
+from collections.abc import Awaitable, Callable, Mapping
+
 from aiogram import Router
 from aiogram.filters import Command
+from aiogram.types import Message
 
 from app.controllers.chat import ChatController
+from app.core.prompts import PromptMode
 from app.services.chat import ChatService
 from app.views.telegram import TelegramView
 
 
-def setup_router(service: ChatService, view: TelegramView) -> Router:
+def setup_router(
+    service: ChatService,
+    view: TelegramView,
+    modes: Mapping[str, PromptMode],
+) -> Router:
     router = Router(name="main")
     handlers = ChatController(service=service, view=view)
 
-    router.message.register(
-        handlers.handle_clear,
-        Command("clear"),
-    )
+    def create_handler(mode: str) -> Callable[[Message], Awaitable[None]]:
+        async def handle(message: Message) -> None:
+            await handlers.handle_reply(message, mode=mode)
 
-    router.message.register(
-        handlers.handle_roast,
-        Command("roast"),
-    )
-    router.message.register(
-        handlers.handle_waifu,
-        Command("waifu"),
-    )
-    router.message.register(
-        handlers.handle_otaku,
-        Command("otaku"),
-    )
+        return handle
+
+    for name in modes:
+        router.message.register(create_handler(name), Command(name))
 
     return router

@@ -1,4 +1,3 @@
-# app/controllers/chat.py
 from aiogram.types import Message
 
 from app.models.chat import ChatRequest, ReplyMode
@@ -11,19 +10,7 @@ class ChatController:
         self.service = service
         self.view = view
 
-    async def handle_clear(self, message: Message) -> None:
-        await self._handle_reply(message, mode="clear")
-
-    async def handle_roast(self, message: Message) -> None:
-        await self._handle_reply(message, mode="roast")
-
-    async def handle_waifu(self, message: Message) -> None:
-        await self._handle_reply(message, mode="waifu")
-
-    async def handle_otaku(self, message: Message) -> None:
-        await self._handle_reply(message, mode="otaku")
-
-    async def _handle_reply(self, message: Message, mode: ReplyMode) -> None:
+    async def handle_reply(self, message: Message, mode: ReplyMode) -> None:
         source = message.reply_to_message
 
         if source is None:
@@ -32,7 +19,7 @@ class ChatController:
                 f"Отправь /{mode} ответом на текстовое сообщение.",
             )
             return
-        elif source.text is None:
+        if source.text is None:
             await self.view.show_error(
                 message,
                 "Нужно ответить командой на сообщение с текстом.",
@@ -42,5 +29,4 @@ class ChatController:
         answer = await self.service.generate_response(
             ChatRequest(text=source.text, mode=mode)
         )
-
         await self.view.show_answer(source, answer)
