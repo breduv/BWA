@@ -8,9 +8,3 @@ search:
 server:
   secret_key: "ab2daa789e16ca6ebd8040fedf8d26569fcdfba3d56b6dfd2256135a6b48e5b7"
   limiter: false
-
-outgoing:
-  request_timeout: 10.0
-  # proxies:
-  #   "all://":
-  #     - "socks5h://USER:PASSWORD@IP:PORT"
