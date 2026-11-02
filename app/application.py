@@ -12,7 +12,7 @@ from app.bot.router import setup_router
 from app.clients.llm import create_llm
 from app.clients.mcp import load_tools
 from app.core.config import Settings
-from app.core.prompts import PromptMode, load_prompt_modes
+from app.core.prompts import PromptMode, load_prompts
 from app.services.chat import ChatService
 from app.services.threads import ThreadResolver
 from app.views.telegram import TelegramView
@@ -37,7 +37,8 @@ def _create_dispatcher(
 
 async def run_application(settings: Settings) -> None:
     """Build application dependencies and own their lifecycle during polling."""
-    modes = load_prompt_modes()
+    prompts = load_prompts()
+    modes = prompts.modes
     logger.info(
         f"Starting bot: {settings.model}",
     )
@@ -57,7 +58,7 @@ async def run_application(settings: Settings) -> None:
             graph = build_graph(
                 model,
                 tools,
-                prompts={name: mode.prompt for name, mode in modes.items()},
+                prompts=prompts,
                 checkpointer=checkpointer,
             )
             dispatcher = _create_dispatcher(

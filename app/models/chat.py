@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Literal
 
-# The list of modes is defined in data/prompts.yml, not in Python type hints.
 ReplyMode = str
 
 

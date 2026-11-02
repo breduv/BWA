@@ -13,7 +13,6 @@ from langgraph.types import Command
 from loguru import logger
 
 from app.agents.state import ChatState
-from app.core.prompts import build_system_prompt
 from app.models.chat import ReplyMode
 
 
@@ -34,7 +33,7 @@ async def call_model(
     try:
         response = await model.ainvoke(
             [
-                SystemMessage(content=build_system_prompt(prompts[state["mode"]])),
+                SystemMessage(content=prompts[state["mode"]]),
                 *state["messages"],
             ],
             config=config,
