@@ -112,7 +112,6 @@ The bundled prompts and some Telegram interface strings are currently in Russian
 | `TG_PROXY` | no | — | Proxy for Telegram Bot API requests |
 | `LOG_LEVEL` | no | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, or `CRITICAL` |
 | `CHECK_HISTORY` | no | `false` | Include a conversation and tool history summary before the answer |
-| `IMAGE_TAG` | no | `latest` | Bot image tag used by Docker Compose |
 
 Leave unused proxies commented out or empty. `PROXY` and `TG_PROXY` do not route
 SearXNG traffic: configure its proxy separately through `outgoing.proxies` in

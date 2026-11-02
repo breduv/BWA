@@ -112,7 +112,6 @@ modes:
 | `TG_PROXY` | нет | — | Прокси для Telegram Bot API |
 | `LOG_LEVEL` | нет | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` или `CRITICAL` |
 | `CHECK_HISTORY` | нет | `false` | Сводка диалога и работы инструментов перед ответом |
-| `IMAGE_TAG` | нет | `latest` | Тег образа бота в Docker Compose |
 
 Неиспользуемые прокси оставьте закомментированными или пустыми. `PROXY` и
 `TG_PROXY` не влияют на SearXNG: его прокси настраивается отдельно через

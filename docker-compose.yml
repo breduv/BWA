@@ -1,7 +1,5 @@
 services:
   bwa:
-    image: bwa:${IMAGE_TAG:-latest}
-
     build:
       context: .
       dockerfile: Dockerfile
