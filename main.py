@@ -5,17 +5,21 @@ from loguru import logger
 
 from app.application import run_application
 from app.core.config import get_settings
+from app.core.logging import configure_logging
 
 
 def main() -> int:
     try:
         settings = get_settings()
-        logger.remove()
-        logger.add(sys.stderr, level=settings.log_level)
-        logger.debug(f"Settings loaded: log_level={settings.log_level}")
+        configure_logging(settings.log_level)
         asyncio.run(run_application(settings))
     except KeyboardInterrupt:
-        logger.info("Application stopped by user")
+        pass
+    except (OSError, RuntimeError, ValueError) as exc:
+        reason = " ".join(str(exc).split())[:250]
+        logger.error(f"Application failed: {type(exc).__name__}: {reason}")
+        logger.opt(exception=exc).debug("Application traceback")
+        return 1
     return 0
 
 

@@ -3,32 +3,46 @@ from functools import partial
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.tools import BaseTool
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from app.agents.nodes import call_model
+from app.agents.nodes import call_model, log_tool_call
 from app.agents.state import ChatState
+from app.core.prompts import SEARCH_PROMPT
 
 
 def build_graph(
     model: BaseChatModel,
     tools: list[BaseTool],
     prompts: Mapping[str, str],
+    checkpointer: BaseCheckpointSaver,
 ) -> CompiledStateGraph:
-    # Если MCP не настроен, модель работает без инструментов.
-    model_with_tools = model.bind_tools(tools) if tools else model
+    if not tools:
+        raise ValueError("No MCP tools available. Configure MCP_SERVERS.")
 
     assistant = partial(
         call_model,
-        model=model_with_tools,
+        model=model.bind_tools(tools, tool_choice="auto"),
         prompts=prompts,
+        tool_count=len(tools),
+    )
+    search_tool = partial(
+        call_model,
+        model=model.bind_tools(tools, tool_choice="required"),
+        prompts={mode: SEARCH_PROMPT for mode in prompts},
+        tool_count=len(tools),
     )
 
     builder = StateGraph(ChatState)
     builder.add_node("assistant", assistant)
-    builder.add_node("tools", ToolNode(tools))
-    builder.add_edge(START, "assistant")
+    builder.add_node("tools", ToolNode(tools, awrap_tool_call=log_tool_call))
+    builder.add_node("search", search_tool)
+
+    builder.add_edge(START, "search")
+    builder.add_edge("search", "tools")
+    builder.add_edge("tools", "assistant")
     builder.add_conditional_edges(
         "assistant",
         tools_condition,
@@ -37,5 +51,5 @@ def build_graph(
             "__end__": END,
         },
     )
-    builder.add_edge("tools", "assistant")
-    return builder.compile()
+
+    return builder.compile(checkpointer=checkpointer)

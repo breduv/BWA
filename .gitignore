@@ -1,3 +1,4 @@
 requirements.in
 .env
 **/__pycache__/
+data/

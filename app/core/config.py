@@ -31,6 +31,8 @@ class Settings(BaseSettings):
         "CRITICAL",
     ] = Field(default="INFO")
 
+    check_history: bool = Field(default=False)
+
     @field_validator("proxy", "tg_proxy", mode="before")
     @classmethod
     def empty_value_to_none(cls, value: object) -> object:

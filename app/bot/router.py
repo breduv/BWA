@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable, Mapping
 
 from aiogram import Router
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
 from app.controllers.chat import ChatController
@@ -18,9 +18,9 @@ def setup_router(
     router = Router(name="main")
     handlers = ChatController(service=service, view=view)
 
-    def create_handler(mode: str) -> Callable[[Message], Awaitable[None]]:
-        async def handle(message: Message) -> None:
-            await handlers.handle_reply(message, mode=mode)
+    def create_handler(mode: str) -> Callable[..., Awaitable[None]]:
+        async def handle(message: Message, command: CommandObject) -> None:
+            await handlers.handle_reply(message, mode=mode, args=command.args)
 
         return handle
 
