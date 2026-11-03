@@ -1,5 +1,3 @@
-"""One console sink for application events and dependency warnings."""
-
 import logging
 import sys
 
