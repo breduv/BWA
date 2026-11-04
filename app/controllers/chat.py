@@ -1,6 +1,7 @@
 from time import perf_counter
 
 from aiogram.types import Message
+from aiogram.utils.chat_action import ChatActionSender
 from loguru import logger
 
 from app.models.chat import ChatRequest, ReplyMode
@@ -21,22 +22,35 @@ class ChatController:
         reply_text = source.text if source is not None else None
         started = perf_counter()
         request_id = f"tg:{message.chat.id}:{message.message_id}"
-        with logger.contextualize(request_id=request_id):
-            logger.info("Request started: /{}", mode)
-            answer = await self.service.generate_response(
-                ChatRequest(
-                    chat_id=message.chat.id,
-                    message_id=message.message_id,
-                    reply_message_id=source.message_id if source is not None else None,
-                    text=text,
-                    reply_text=reply_text,
-                    mode=mode,
+
+        if message.bot is None:
+            return
+
+        async with ChatActionSender.typing(
+            chat_id=message.chat.id,
+            bot=message.bot,
+            message_thread_id=(
+                message.message_thread_id if message.is_topic_message else None
+            ),
+        ):
+            with logger.contextualize(request_id=request_id):
+                logger.info("Request started: /{}", mode)
+                answer = await self.service.generate_response(
+                    ChatRequest(
+                        chat_id=message.chat.id,
+                        message_id=message.message_id,
+                        reply_message_id=source.message_id
+                        if source is not None
+                        else None,
+                        text=text,
+                        reply_text=reply_text,
+                        mode=mode,
+                    )
                 )
-            )
-            logger.debug("Delivering response")
-            await self.view.show_answer(
-                source if (args is None and source is not None) else message, answer
-            )
-            logger.info(
-                f"Request delivered ({perf_counter() - started:.1f}s)",
-            )
+                logger.debug("Delivering response")
+                await self.view.show_answer(
+                    source if (args is None and source is not None) else message, answer
+                )
+                logger.info(
+                    f"Request delivered ({perf_counter() - started:.1f}s)",
+                )
