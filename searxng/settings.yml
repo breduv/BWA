@@ -6,5 +6,12 @@ search:
     - json
 
 server:
-  secret_key: "ab2daa789e16ca6ebd8040fedf8d26569fcdfba3d56b6dfd2256135a6b48e5b7"
+  secret_key: "<SECRET_KEY>"
   limiter: false
+
+# outgoing:
+#   request_timeout: 10.0
+#   max_request_timeout: 10.0
+#   proxies:
+#     "all://":
+#       - "http://user:password@host:port"
