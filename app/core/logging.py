@@ -15,9 +15,16 @@ class _InterceptHandler(logging.Handler):
 
 def configure_logging(level: str) -> None:
     logger.remove()
+    logger.configure(extra={"request_id": "-"})
     logger.add(
         sys.stderr,
         level=level,
+        format=(
+            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+            "<level>{level: <8}</level> | {extra[request_id]} | "
+            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+            "<level>{message}</level>"
+        ),
         backtrace=False,
         diagnose=False,
     )

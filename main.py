@@ -9,16 +9,16 @@ from app.core.logging import configure_logging
 
 
 def main() -> int:
+    # Configuration errors must also use the production-safe logging setup.
+    configure_logging("INFO")
     try:
         settings = get_settings()
         configure_logging(settings.log_level)
         asyncio.run(run_application(settings))
     except KeyboardInterrupt:
         pass
-    except (OSError, RuntimeError, ValueError) as exc:
-        reason = " ".join(str(exc).split())[:250]
-        logger.error(f"Application failed: {type(exc).__name__}: {reason}")
-        logger.opt(exception=exc).debug("Application traceback")
+    except Exception:  # noqa: BLE001
+        logger.exception("Application failed")
         return 1
     return 0
 

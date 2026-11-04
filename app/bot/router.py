@@ -5,6 +5,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
 from app.controllers.chat import ChatController
+from app.controllers.errors import ErrorController
 from app.core.prompts import PromptMode
 from app.services.chat import ChatService
 from app.views.telegram import TelegramView
@@ -17,6 +18,7 @@ def setup_router(
 ) -> Router:
     router = Router(name="main")
     handlers = ChatController(service=service, view=view)
+    router.errors.register(ErrorController(view).handle)
 
     def create_handler(mode: str) -> Callable[..., Awaitable[None]]:
         async def handle(message: Message, command: CommandObject) -> None:

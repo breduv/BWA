@@ -222,9 +222,10 @@ docker compose logs -f bwa
 docker compose down
 ```
 
-`INFO` records request progress, model decisions, and tool outcomes using standard
-Loguru formatting. `DEBUG` adds token usage, checkpoints, and error tracebacks.
-Use the conversation identifier to follow related log messages.
+`INFO` records request progress, model decisions, and tool outcomes. Every request
+log includes a `request_id`. Technical failures include tracebacks at `ERROR`,
+also visible with `LOG_LEVEL=INFO`; `DEBUG` adds token usage and checkpoints.
+Users receive safe error messages and a reference matching the logs.
 
 <details>
 <summary>Search returns CAPTCHA or times out</summary>

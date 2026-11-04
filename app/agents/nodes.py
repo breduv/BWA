@@ -11,8 +11,15 @@ from langchain_core.runnables import Runnable, RunnableConfig
 from langgraph.prebuilt.tool_node import ToolCallRequest
 from langgraph.types import Command
 from loguru import logger
+from openai import APIError, APITimeoutError, RateLimitError
 
 from app.agents.state import ChatState
+from app.core.errors import (
+    InvalidModelResponseError,
+    ModelRateLimitError,
+    ModelTimeoutError,
+    ModelUnavailableError,
+)
 from app.models.chat import ReplyMode
 
 
@@ -38,11 +45,12 @@ async def call_model(
             ],
             config=config,
         )
-    except Exception as exc:
-        logger.debug(
-            f"LLM {node} ({thread_id}): {type(exc).__name__}",
-        )
-        raise
+    except APITimeoutError as exc:
+        raise ModelTimeoutError("Model request timed out") from exc
+    except RateLimitError as exc:
+        raise ModelRateLimitError("Model rate limit exceeded") from exc
+    except APIError as exc:
+        raise ModelUnavailableError("Model API request failed") from exc
 
     usage = response.usage_metadata or {}
     if usage:
@@ -51,7 +59,7 @@ async def call_model(
             f"out={usage.get('output_tokens')}",
         )
     if response.invalid_tool_calls:
-        raise ValueError("Model returned malformed tool calls")
+        raise InvalidModelResponseError("Model returned malformed tool calls")
 
     decision = (
         f"tools: {', '.join(call['name'] for call in response.tool_calls)}"
@@ -80,13 +88,7 @@ async def log_tool_call(
     logger.debug(
         f"Tool {tool_name} ({thread_id}): started",
     )
-    try:
-        result = await execute(request)
-    except Exception as exc:
-        logger.debug(
-            f"Tool {tool_name} ({thread_id}): {type(exc).__name__}",
-        )
-        raise
+    result = await execute(request)
     status = result.status if isinstance(result, ToolMessage) else "command"
     error = (
         " ".join(result.text.split())[:250]

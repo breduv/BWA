@@ -51,21 +51,15 @@ async def load_tools(settings: Settings) -> list[BaseTool]:
     started = perf_counter()
     logger.info(f"Connecting MCP: {', '.join(settings.mcp_servers)}")
 
-    try:
-        async with MCPAdapter(
-            Client(config, log_handler=_log_server_message)
-        ) as adapter:
-            tools = await adapter.list_tools()
-        if not tools:
-            raise RuntimeError("Configured MCP servers returned no tools")
-        names = [tool.name for tool in tools]
-        if len(names) != len(set(names)):
-            raise RuntimeError("MCP servers returned duplicate tool names")
-    except Exception as exc:
-        logger.debug(
-            f"MCP connection failed: {type(exc).__name__}",
-        )
-        raise
+    async with MCPAdapter(
+        Client(config, log_handler=_log_server_message)
+    ) as adapter:
+        tools = await adapter.list_tools()
+    if not tools:
+        raise RuntimeError("Configured MCP servers returned no tools")
+    names = [tool.name for tool in tools]
+    if len(names) != len(set(names)):
+        raise RuntimeError("MCP servers returned duplicate tool names")
 
     logger.info(
         f"MCP: loaded {len(tools)} tools ({perf_counter() - started:.1f}s)",

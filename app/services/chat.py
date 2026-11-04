@@ -1,6 +1,12 @@
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langgraph.errors import GraphRecursionError
 from langgraph.graph.state import CompiledStateGraph, RunnableConfig
 
+from app.core.errors import (
+    EmptyRequestError,
+    GenerationLimitError,
+    InvalidModelResponseError,
+)
 from app.models.chat import ChatHistoryEntry, ChatRequest, ChatResponse
 from app.services.threads import ThreadResolver
 
@@ -17,12 +23,12 @@ class ChatService:
         self.check_history = check_history
 
     async def generate_response(self, request: ChatRequest) -> ChatResponse:
-        thread = await self.thread_resolver.resolve(request)
-
-        text = request.text or request.reply_text
+        text = request.text.strip() or (request.reply_text or "").strip()
 
         if not text:
-            raise ValueError("Request text is empty")
+            raise EmptyRequestError("Request text is empty")
+
+        thread = await self.thread_resolver.resolve(request)
 
         config: RunnableConfig = {
             "recursion_limit": 12,
@@ -34,15 +40,20 @@ class ChatService:
         if thread.checkpoint_id is not None:
             config["configurable"]["checkpoint_id"] = thread.checkpoint_id
 
-        result = await self.graph.ainvoke(
-            {
-                "messages": [HumanMessage(content=text)],
-                "mode": request.mode,
-            },
-            config=config,
-        )
+        try:
+            result = await self.graph.ainvoke(
+                {
+                    "messages": [HumanMessage(content=text)],
+                    "mode": request.mode,
+                },
+                config=config,
+            )
+        except GraphRecursionError as exc:
+            raise GenerationLimitError("Graph exceeded its step limit") from exc
 
-        messages = result["messages"]
+        messages = result.get("messages", [])
+        if not messages:
+            raise InvalidModelResponseError("Graph returned no messages")
         final_message = messages[-1]
         if (
             not isinstance(final_message, AIMessage)
@@ -50,7 +61,7 @@ class ChatService:
             or final_message.invalid_tool_calls
             or not final_message.text.strip()
         ):
-            raise ValueError("Graph did not produce a final text response")
+            raise InvalidModelResponseError("Graph did not produce a final text response")
 
         state = await self.graph.aget_state(
             {"configurable": {"thread_id": thread.thread_id}}
