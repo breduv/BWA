@@ -27,6 +27,7 @@ services:
 
     volumes:
       - "./data:/app/data"
+      - ./config/prompts.yml:/app/config/prompts.yml:ro
 
     networks:
       - agent_net
