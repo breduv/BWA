@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 import httpx
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from app.core.config import Settings
 
@@ -18,7 +19,7 @@ async def create_llm(
         model = ChatOpenAI(
             model=settings.model,
             base_url=settings.api_base,
-            api_key=settings.api_key,
+            api_key=settings.api_key or SecretStr("not-required"),
             http_async_client=http_client,
             http_socket_options=(),
             use_responses_api=False,
