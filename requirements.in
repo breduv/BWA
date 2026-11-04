@@ -1,0 +1,10 @@
+aiogram
+pydantic_settings
+loguru
+aiohttp_socks
+httpx[socks]
+langgraph
+langchain-openai
+langchain[mcp]>=1.4.0
+langgraph-checkpoint-sqlite 
+aiosqlite
