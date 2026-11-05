@@ -12,7 +12,7 @@ from app.bot.router import setup_router
 from app.clients.llm import create_llm
 from app.clients.mcp import load_tools
 from app.core.config import Settings
-from app.core.prompts import PromptMode, load_prompts
+from app.core.prompts import BUILTIN_COMMANDS, PromptMode, load_prompts
 from app.services.chat import ChatService
 from app.services.threads import ThreadResolver
 from app.views.telegram import TelegramView
@@ -68,13 +68,13 @@ async def run_application(settings: Settings) -> None:
             )
 
             async with _create_bot(settings).context() as bot:
+                commands = BUILTIN_COMMANDS | {
+                    mode.name: mode.description for mode in modes.values()
+                }
                 await bot.set_my_commands(
                     [
-                        BotCommand(
-                            command=mode.name,
-                            description=mode.description,
-                        )
-                        for mode in modes.values()
+                        BotCommand(command=name, description=description)
+                        for name, description in commands.items()
                     ]
                 )
                 logger.info("Polling started")
