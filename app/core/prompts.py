@@ -6,6 +6,10 @@ import yaml
 
 DEFAULT_PROMPTS_FILE = Path(__file__).resolve().parents[2] / "config" / "prompts.yml"
 COMMAND_PATTERN = re.compile(r"[a-z][a-z0-9_]{0,31}\Z")
+BUILTIN_COMMANDS = {
+    "start": "Начать работу с ботом",
+    "help": "Посмотреть справку и список режимов",
+}
 
 
 def build_system_prompt(mode_prompt: str, tool_policy: str) -> str:
@@ -63,13 +67,16 @@ def load_prompts(path: Path = DEFAULT_PROMPTS_FILE) -> PromptConfig:
             raise ValueError(f"{path}: {key} must be non-empty text")
 
     entries = config["modes"]
-    if not 1 <= len(entries) <= 100:
-        raise ValueError(f"{path}: Telegram requires 1 to 100 bot commands")
+    max_modes = 100 - len(BUILTIN_COMMANDS)
+    if not 1 <= len(entries) <= max_modes:
+        raise ValueError(f"{path}: expected 1 to {max_modes} prompt modes")
 
     modes: dict[str, PromptMode] = {}
     for name, value in entries.items():
         if not isinstance(name, str) or not COMMAND_PATTERN.fullmatch(name):
             raise ValueError(f"{path}: invalid Telegram command {name!r}")
+        if name in BUILTIN_COMMANDS:
+            raise ValueError(f"{path}: /{name} is reserved for a built-in command")
         if not isinstance(value, dict) or set(value) != {"description", "prompt"}:
             raise ValueError(
                 f"{path}: /{name} must contain only 'description' and 'prompt'"

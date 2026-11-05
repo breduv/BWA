@@ -31,10 +31,10 @@ def _history_text(history: list[ChatHistoryEntry]) -> str:
     return text
 
 
-def _split_message(text: str) -> Iterator[str]:
-    """Prefer paragraph boundaries and stay below the rich-message size limit."""
+def _split_message(text: str, max_bytes: int = 32000) -> Iterator[str]:
+    """Prefer paragraph boundaries when splitting a Telegram message."""
     while text:
-        chunk = text.encode("utf-8")[:32000].decode("utf-8", errors="ignore")
+        chunk = text.encode("utf-8")[:max_bytes].decode("utf-8", errors="ignore")
         if len(chunk) < len(text):
             for separator in ("\n\n", "\n", " "):
                 split_at = chunk.rfind(separator)
@@ -49,16 +49,15 @@ class TelegramView:
     def __init__(self, store: BaseStore):
         self.store = store
 
-    async def show_error(self, command: Message, text: str) -> None:
-        await command.reply(
-            text,
-            parse_mode=None,
-            direct_messages_topic_id=(
-                command.direct_messages_topic.topic_id
-                if command.direct_messages_topic
-                else None
-            ),
+    async def show_text(self, source: Message, text: str) -> None:
+        direct_messages_topic_id = (
+            source.direct_messages_topic.topic_id if source.direct_messages_topic else None
         )
+        for index, chunk in enumerate(_split_message(text, max_bytes=4096)):
+            send = source.reply if index == 0 else source.answer
+            await send(
+                chunk, parse_mode=None, direct_messages_topic_id=direct_messages_topic_id
+            )
 
     async def show_answer(self, source: Message, response: ChatResponse) -> None:
         if not response.text.strip():

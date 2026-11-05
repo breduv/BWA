@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable, Mapping
 
 from aiogram import Router
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
 from app.controllers.chat import ChatController
@@ -19,6 +19,27 @@ def setup_router(
     router = Router(name="main")
     handlers = ChatController(service=service, view=view)
     router.errors.register(ErrorController(view).handle)
+
+    async def start(message: Message) -> None:
+        await view.show_text(
+            message,
+            "Привет! Я Webwit, помощник с веб-поиском. "
+            "Открой /help, чтобы посмотреть режимы и узнать, как задать вопрос.",
+        )
+
+    async def help_command(message: Message) -> None:
+        mode_list = "\n".join(
+            f"/{mode.name} — {mode.description}" for mode in modes.values()
+        )
+        await view.show_text(
+            message,
+            "Выбери режим и напиши вопрос после команды. "
+            "Можно также отправить команду в ответ на текстовое сообщение.\n\n"
+            f"Доступные режимы\n{mode_list}",
+        )
+
+    router.message.register(start, CommandStart())
+    router.message.register(help_command, Command("help"))
 
     def create_handler(mode: str) -> Callable[..., Awaitable[None]]:
         async def handle(message: Message, command: CommandObject) -> None:

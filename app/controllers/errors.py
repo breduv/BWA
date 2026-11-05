@@ -69,7 +69,7 @@ class ErrorController:
             if not isinstance(error, EmptyRequestError):
                 text += f"\nКод ошибки: {request_id}"
             try:
-                await self.view.show_error(message, text)
+                await self.view.show_text(message, text)
             except Exception as notification_error:  # noqa: BLE001
                 # Terminal boundary: never recursively try to report a failed report.
                 logger.opt(exception=notification_error).error(
