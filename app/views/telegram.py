@@ -1,8 +1,7 @@
 from collections.abc import Iterator
 from html import escape
 
-from aiogram.enums import ParseMode
-from aiogram.types import InputRichMessage, Message, ReplyParameters
+from aiogram.types import InputRichMessage, Message
 from langgraph.store.base import BaseStore
 from loguru import logger
 
@@ -51,7 +50,15 @@ class TelegramView:
         self.store = store
 
     async def show_error(self, command: Message, text: str) -> None:
-        await command.reply(escape(text), parse_mode=ParseMode.HTML)
+        await command.reply(
+            text,
+            parse_mode=None,
+            direct_messages_topic_id=(
+                command.direct_messages_topic.topic_id
+                if command.direct_messages_topic
+                else None
+            ),
+        )
 
     async def show_answer(self, source: Message, response: ChatResponse) -> None:
         if not response.text.strip():
@@ -62,29 +69,20 @@ class TelegramView:
                 "<blockquote expandable><b>История диалога</b>\n\n"
                 f"{escape(_history_text(response.history))}</blockquote>\n\n{content}"
             )
-        bot = source.bot
-        if bot is None:
+        if source.bot is None:
             raise RuntimeError("Cannot send a response without a bot instance")
         chunks_sent = 0
+        direct_messages_topic_id = (
+            source.direct_messages_topic.topic_id
+            if source.direct_messages_topic
+            else None
+        )
 
         for chunk in _split_message(content):
-            sent = await bot.send_rich_message(
-                chat_id=source.chat.id,
+            send = source.reply_rich if chunks_sent == 0 else source.answer_rich
+            sent = await send(
                 rich_message=InputRichMessage(markdown=chunk),
-                reply_parameters=(
-                    ReplyParameters(message_id=source.message_id)
-                    if chunks_sent == 0
-                    else None
-                ),
-                message_thread_id=source.message_thread_id
-                if source.is_topic_message
-                else None,
-                business_connection_id=source.business_connection_id,
-                direct_messages_topic_id=(
-                    source.direct_messages_topic.topic_id
-                    if source.direct_messages_topic
-                    else None
-                ),
+                direct_messages_topic_id=direct_messages_topic_id,
             )
 
             chunks_sent += 1
