@@ -1,10 +1,10 @@
 services:
-  bwa:
+  webwit:
     build:
       context: .
       dockerfile: Dockerfile
 
-    container_name: bwa
+    container_name: webwit
 
     restart: unless-stopped
 
@@ -34,7 +34,7 @@ services:
 
   searxng:
     image: searxng/searxng:latest
-    container_name: bwa-searxng
+    container_name: webwit-searxng
     restart: unless-stopped
 
     environment:
@@ -48,7 +48,7 @@ services:
 
   mcp-search:
     image: isokoliuk/mcp-searxng:latest
-    container_name: bwa-mcp-search
+    container_name: webwit-mcp-search
     restart: unless-stopped
 
     depends_on:

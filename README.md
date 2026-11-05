@@ -2,7 +2,7 @@
 
 **English** · [Русский](README.ru.md)
 
-# BWA
+# Webwit
 
 **A Telegram assistant with web search and conversation memory**
 
@@ -141,7 +141,7 @@ SearXNG traffic: configure its proxy separately through `outgoing.proxies` in
 
 | Service | Role |
 | --- | --- |
-| `bwa` | Telegram updates, model calls, and graph execution |
+| `webwit` | Telegram updates, model calls, and graph execution |
 | `mcp-search` | MCP interface for search and page-reading tools |
 | `searxng` | Queries to external search engines |
 
@@ -213,10 +213,10 @@ Run commands from the project root: `.env` and SQLite paths are relative to it.
 
 ```bash
 # Recent logs from all services
-docker compose logs --since=15m --tail=100 bwa searxng mcp-search
+docker compose logs --since=15m --tail=100 webwit searxng mcp-search
 
 # Follow bot logs
-docker compose logs -f bwa
+docker compose logs -f webwit
 
 # Stop the stack
 docker compose down

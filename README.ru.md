@@ -2,7 +2,7 @@
 
 [English](README.md) · **Русский**
 
-# BWA
+# Webwit
 
 **Telegram-помощник с веб-поиском и памятью диалогов**
 
@@ -141,7 +141,7 @@ modes:
 
 | Сервис | Назначение |
 | --- | --- |
-| `bwa` | Обновления Telegram, обращения к модели и выполнение графа |
+| `webwit` | Обновления Telegram, обращения к модели и выполнение графа |
 | `mcp-search` | MCP-интерфейс инструментов поиска и чтения страниц |
 | `searxng` | Запросы к внешним поисковым системам |
 
@@ -215,10 +215,10 @@ New-Item -ItemType Directory -Force data
 
 ```bash
 # Свежие логи всех сервисов
-docker compose logs --since=15m --tail=100 bwa searxng mcp-search
+docker compose logs --since=15m --tail=100 webwit searxng mcp-search
 
 # Следить за логами бота
-docker compose logs -f bwa
+docker compose logs -f webwit
 
 # Остановить стек
 docker compose down
