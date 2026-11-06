@@ -51,6 +51,8 @@ Chat Completions API supporting tool calls and `tool_choice="required"`.
    CHECK_HISTORY=false
    ```
 
+   Leave `API_KEY` empty if your provider does not require authentication.
+
 3. Review [`searxng/settings.yml`](searxng/settings.yml): set a unique
    `server.secret_key` and configure or remove `outgoing.proxies` for your
    environment. Keep `json` enabled in `search.formats`.
@@ -62,20 +64,24 @@ Chat Completions API supporting tool calls and `tool_choice="required"`.
 
 Send `/clear How do hummingbirds hover?` to the bot.
 
-The bot uses long polling; no public webhook endpoint is needed. Compose mounts
-`./data` for conversation storage and `./searxng` for search configuration.
+The bot uses long polling and does not need a public webhook endpoint. Compose
+mounts the `webwit_data` volume at `/app/data` for conversation storage and
+`./searxng` at `/etc/searxng` for search configuration.
 
 ## Usage
 
 | Action | Example |
 | --- | --- |
+| See the welcome message | `/start` |
+| List available modes and see how to ask a question | `/help` |
 | Start a conversation | `/clear How do solar panels work?` |
 | Continue a conversation | Reply to the bot with `/clear What about cloudy weather?` |
 | Ask about a text message | Reply to that message with `/clear` |
 
-Only configured commands are handled. A command that does not reply to a linked
-bot message starts a new conversation. When replying to the bot, include your
-new question: Rich Messages may not provide a plain `text` field.
+The bot handles the built-in commands and the modes defined in the YAML file.
+A mode command starts a new conversation unless it replies to a linked bot
+message. Include your new question when replying to the bot because Rich Messages
+may lack a plain `text` field.
 
 ### Custom modes
 
@@ -115,8 +121,8 @@ and assembles system messages; prompt text is not embedded in Python.
 All three sections are required. Empty prompts, duplicate or unknown keys,
 and invalid mode definitions prevent startup.
 
-Restart the bot after editing YAML. For Docker, run `docker compose up -d --build`
-to include the updated file in the image.
+Restart the bot after editing YAML. Compose mounts `./config` into the container,
+so run `docker compose restart webwit` to load the updated file.
 The bundled prompts and some Telegram interface strings are currently in Russian.
 
 ## Configuration
@@ -125,7 +131,7 @@ The bundled prompts and some Telegram interface strings are currently in Russian
 | --- | :---: | --- | --- |
 | `BOT_TOKEN` | yes | — | Telegram bot token |
 | `API_BASE` | yes | — | Provider base URL, without `/chat/completions` |
-| `API_KEY` | for API access | — | Provider API key; use `unused` for a local API without authentication |
+| `API_KEY` | if the provider requires authentication | — | Provider API key. Leave empty for an API without authentication. |
 | `MODEL` | yes | — | Exact model identifier accepted by the provider |
 | `MCP_SERVERS` | yes | `{}` | MCP server configuration as JSON; startup requires at least one tool |
 | `PROXY` | no | — | Proxy for LLM requests |
@@ -166,8 +172,12 @@ included Compose configuration.
 | `data/checkpoints.sqlite3` | Conversation state, including tool calls and results |
 | `data/links.sqlite3` | Links between Telegram messages, conversations, and checkpoints |
 
+These paths are relative to the project root when running Python locally. With
+Compose, both files are under `/app/data` in the `webwit_data` volume, which
+persists across container recreation.
+
 Replying to an earlier bot message resumes its checkpoint, allowing separate
-conversation branches. The data directory persists across container recreation.
+conversation branches.
 
 With `CHECK_HISTORY=true`, the answer includes an expandable history summary.
 Long entries are shortened and older entries may be hidden. The current final
@@ -238,11 +248,11 @@ For DuckDuckGo, `CAPTCHA (wt-wt)` may be related to the `all` language setting;
 see [SearXNG issue #6779](https://github.com/searxng/searxng/issues/6779).
 Compare a query using `all` with one using a specific language.
 
-Optional settings belong in the **`mcp-search` service environment**:
+The Compose configuration sets these values in the `mcp-search` service environment.
 
 ```yaml
 SEARXNG_DEFAULT_LANGUAGE: en
-SEARXNG_TIMEOUT_MS: "20000"
+SEARXNG_TIMEOUT_MS: "15000"
 ```
 
 The language default applies when a tool call omits `language`. Coordinate MCP
@@ -271,7 +281,7 @@ app/
 
 config/prompts.yml # Search instructions, shared policy, and mode prompts
 searxng/          # Search service configuration
-data/             # SQLite storage; excluded from Git
+data/             # Local SQLite storage, ignored by Git
 main.py           # Application entry point
 ```
 
