@@ -26,7 +26,7 @@ services:
         max-file: "1"
 
     volumes:
-      - "./data:/app/data"
+      - webwit_data:/app/data
       - ./config:/app/config
 
     networks:
@@ -69,4 +69,5 @@ networks:
     driver: bridge
 
 volumes:
-  searxng_cache:
+  webwit_data:
+    name: webwit_data
